@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Entrepreneur Command Center</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Space+Grotesk:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{background:#191919;min-height:100vh;font-family:'Space Grotesk',sans-serif;color:#e8e8e8;overflow:hidden}
+
+/* AMBIENT */
+.amb{position:fixed;inset:0;pointer-events:none;z-index:0}
+.amb-1{position:absolute;top:-20%;left:-10%;width:60%;height:60%;background:radial-gradient(ellipse,rgba(99,82,255,0.07) 0%,transparent 65%);animation:d1 14s ease-in-out infinite alternate}
+.amb-2{position:absolute;bottom:-20%;right:-10%;width:55%;height:55%;background:radial-gradient(ellipse,rgba(34,197,120,0.05) 0%,transparent 65%);animation:d2 17s ease-in-out infinite alternate}
+@keyframes d1{0%{transform:translate(0,0)}100%{transform:translate(20px,15px)}}
+@keyframes d2{0%{transform:translate(0,0)}100%{transform:translate(-15px,20px)}}
+
+.wrap{position:relative;z-index:1;display:flex;flex-direction:column;min-height:100vh;padding:16px 18px 12px;gap:11px}
+
+/* TOP NAV */
+.top-nav{display:flex;align-items:center;justify-content:space-between}
+.brand{font-family:'DM Mono',monospace;font-size:8.5px;letter-spacing:.18em;text-transform:uppercase;color:#666}
+.tabs{display:flex;gap:2px;background:#1e1e1e;border:0.5px solid #2a2a2a;border-radius:8px;padding:3px}
+.tab{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.08em;text-transform:uppercase;color:#555;background:none;border:none;padding:5px 12px;border-radius:5px;cursor:pointer;transition:all .2s}
+.tab.active{background:#252525;color:#ccc;box-shadow:0 1px 5px rgba(0,0,0,.5)}
+.tab:hover:not(.active){color:#999}
+.live{display:flex;align-items:center;gap:5px;font-family:'DM Mono',monospace;font-size:8px;color:#555;letter-spacing:.08em}
+.ldot{width:5px;height:5px;border-radius:50%;background:#3a9e6a;box-shadow:0 0 8px rgba(34,197,120,0.6);animation:lp 2.5s ease-in-out infinite}
+@keyframes lp{0%,100%{opacity:1;box-shadow:0 0 8px rgba(34,197,120,0.6)}50%{opacity:.3;box-shadow:none}}
+
+/* SCREENS */
+.screen{display:none;flex-direction:column;flex:1;gap:11px}
+.screen.active{display:flex}
+
+/* ══ BRIEFING ══ */
+
+/* context banner - changes by time */
+.ctx-banner{border-radius:9px;padding:9px 14px;display:flex;align-items:center;gap:10px;border:0.5px solid}
+.ctx-banner.morning{background:rgba(99,82,255,0.06);border-color:rgba(99,82,255,0.15)}
+.ctx-banner.afternoon{background:rgba(234,179,8,0.05);border-color:rgba(234,179,8,0.12)}
+.ctx-banner.evening{background:rgba(34,197,120,0.05);border-color:rgba(34,197,120,0.12)}
+.ctx-icon{font-size:16px;flex-shrink:0}
+.ctx-text{flex:1}
+.ctx-title{font-size:11px;font-weight:500;color:#ccc;margin-bottom:1px}
+.ctx-sub{font-family:'DM Mono',monospace;font-size:8.5px;color:#666;letter-spacing:.04em}
+
+/* clock row */
+.clock-row{display:flex;align-items:baseline;justify-content:space-between}
+.clock-big{font-family:'DM Mono',monospace;font-size:44px;font-weight:300;color:#e0e0e0;letter-spacing:-.03em;line-height:1;text-shadow:0 0 40px rgba(220,220,220,0.08)}
+.csep{color:#2e2e2e;animation:cb 1s step-end infinite}
+@keyframes cb{0%,100%{color:#2e2e2e}50%{color:#777}}
+.campm{font-family:'DM Mono',monospace;font-size:12px;color:#555;margin-left:6px}
+.clock-meta-col{text-align:right}
+.cdate{font-family:'DM Mono',monospace;font-size:9px;color:#777;letter-spacing:.04em}
+.cweek{font-family:'DM Mono',monospace;font-size:8px;color:#555;margin-top:2px;letter-spacing:.04em}
+
+/* chips row */
+.chips{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+.chip{background:#1e1e1e;border:0.5px solid #272727;border-radius:7px;padding:8px 6px;text-align:center}
+.chip-label{font-family:'DM Mono',monospace;font-size:7px;letter-spacing:.1em;text-transform:uppercase;color:#555;margin-bottom:4px}
+.chip-val{font-family:'DM Mono',monospace;font-size:16px;color:#bbb;line-height:1}
+.chip-val.accent-purple{color:#9090dd;text-shadow:0 0 14px rgba(99,82,255,0.35)}
+.chip-val.accent-green{color:#5abb80;text-shadow:0 0 14px rgba(34,197,120,0.3)}
+.chip-val.accent-amber{color:#ccaa44;text-shadow:0 0 14px rgba(234,179,8,0.25)}
+.chip-unit{font-family:'DM Mono',monospace;font-size:7px;color:#444;margin-top:2px}
+
+/* progress bars */
+.progs{display:flex;flex-direction:column;gap:5px}
+.pr{display:grid;grid-template-columns:42px 1fr 28px;align-items:center;gap:8px}
+.pr-lbl{font-family:'DM Mono',monospace;font-size:7.5px;letter-spacing:.1em;text-transform:uppercase;color:#666}
+.pr-track{height:2px;background:#222;border-radius:20px;position:relative}
+.pr-fill{height:100%;border-radius:20px;position:relative;transition:width 1.4s cubic-bezier(.4,0,.2,1)}
+.pr-fill::after{content:'';position:absolute;right:-1px;top:50%;transform:translateY(-50%);width:4px;height:4px;border-radius:50%;background:inherit}
+.ry .pr-fill{background:#5050a0}.ry .pr-fill::after{box-shadow:0 0 10px rgba(99,82,255,0.9)}
+.rq .pr-fill{background:#388858}.rq .pr-fill::after{box-shadow:0 0 10px rgba(34,197,120,0.8)}
+.rm .pr-fill{background:#887030}.rm .pr-fill::after{box-shadow:0 0 10px rgba(234,179,8,0.7)}
+.rw .pr-fill{background:#286880}.rw .pr-fill::after{box-shadow:0 0 10px rgba(56,189,248,0.7)}
+.pr-pct{font-family:'DM Mono',monospace;font-size:7.5px;color:#666;text-align:right}
+
+/* intention card */
+.int-card{background:#1e1e1e;border:0.5px solid #2a2a2a;border-radius:10px;padding:12px 14px;position:relative;overflow:hidden}
+.int-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(99,82,255,0.25),transparent)}
+.ic-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.ic-label{font-family:'DM Mono',monospace;font-size:7.5px;letter-spacing:.14em;text-transform:uppercase;color:#777}
+.streak-badge{display:flex;align-items:center;gap:4px;background:#1a1a2a;border:0.5px solid #2a2a4a;border-radius:20px;padding:3px 8px}
+.streak-n{font-family:'DM Mono',monospace;font-size:12px;color:#8888cc;text-shadow:0 0 10px rgba(99,82,255,0.4);line-height:1}
+.streak-fire{font-size:10px}
+.int-input{width:100%;background:none;border:none;outline:none;font-family:'Space Grotesk',sans-serif;font-size:13px;color:#ccc;caret-color:#9090dd;margin-bottom:8px}
+.int-input::placeholder{color:#3a3a3a}
+.int-input:focus{color:#e0e0e0}
+.int-row2{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.energy-btns{display:flex;gap:4px}
+.eb{background:#1a1a1a;border:0.5px solid #262626;border-radius:6px;padding:4px 8px;font-size:11px;cursor:pointer;transition:all .2s;line-height:1}
+.eb:hover{border-color:#3a3a3a}
+.eb.sel-low{background:#1a1a2a;border-color:#3a3a7a;box-shadow:0 0 8px rgba(99,82,255,0.15)}
+.eb.sel-med{background:#1a2a1e;border-color:#2a5a3a;box-shadow:0 0 8px rgba(34,197,120,0.15)}
+.eb.sel-high{background:#2a2610;border-color:#5a5010;box-shadow:0 0 8px rgba(234,179,8,0.15)}
+.int-save{background:#1e1e30;border:0.5px solid #3030608;border-radius:6px;padding:5px 12px;font-family:'DM Mono',monospace;font-size:7.5px;letter-spacing:.1em;text-transform:uppercase;color:#7777bb;cursor:pointer;transition:all .2s;border-color:#303060}
+.int-save:hover{background:#222240;border-color:#5050a0;color:#aaaaee;box-shadow:0 0 12px rgba(99,82,255,0.2)}
+
+/* today's tasks quick list */
+.tasks-card{background:#1e1e1e;border:0.5px solid #272727;border-radius:10px;padding:11px 14px}
+.tc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.tc-label{font-family:'DM Mono',monospace;font-size:7.5px;letter-spacing:.14em;text-transform:uppercase;color:#777}
+.tc-add{font-family:'DM Mono',monospace;font-size:9px;color:#444;cursor:pointer;transition:color .2s;background:none;border:none;padding:0}
+.tc-add:hover{color:#aaa}
+.task-list{display:flex;flex-direction:column;gap:5px;max-height:90px;overflow-y:auto}
+.task-item{display:flex;align-items:center;gap:8px;cursor:pointer;group:true}
+.task-check{width:14px;height:14px;border:1px solid #333;border-radius:3px;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.task-check.done{background:#2a5a3a;border-color:#3a8a5a}
+.task-check.done::after{content:'✓';font-size:8px;color:#5abb80}
+.task-text{font-size:11px;color:#aaa;transition:color .2s;flex:1}
+.task-text.done{color:#444;text-decoration:line-through}
+.task-del{font-size:9px;color:#333;cursor:pointer;opacity:0;transition:opacity .15s;background:none;border:none;padding:0 2px}
+.task-item:hover .task-del{opacity:1}
+.task-input-row{display:flex;gap:5px;margin-top:6px}
+.task-new-input{flex:1;background:#191919;border:0.5px solid #2a2a2a;border-radius:6px;padding:5px 8px;font-family:'Space Grotesk',sans-serif;font-size:11px;color:#ccc;outline:none;caret-color:#5abb80}
+.task-new-input::placeholder{color:#333}
+.task-add-btn{background:#1a2a1e;border:0.5px solid #2a5a3a;border-radius:6px;padding:5px 10px;font-family:'DM Mono',monospace;font-size:8px;color:#5a9a6a;cursor:pointer;transition:all .2s}
+.task-add-btn:hover{border-color:#4a8a5a;color:#7acc8a}
+.no-tasks{font-family:'DM Mono',monospace;font-size:9px;color:#444;font-style:italic}
+
+/* evening reflection */
+.reflect-card{background:#1e1e1e;border:0.5px solid #2a2a2a;border-radius:10px;padding:12px 14px;position:relative;overflow:hidden}
+.reflect-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(234,179,8,0.2),transparent)}
+.rc-label{font-family:'DM Mono',monospace;font-size:7.5px;letter-spacing:.14em;text-transform:uppercase;color:#777;margin-bottom:6px}
+.rc-echo{font-size:11px;color:#888;font-style:italic;margin-bottom:10px;line-height:1.5;padding:6px 10px;background:#191919;border-radius:6px;border-left:2px solid #303060}
+.rc-question{font-size:11px;color:#888;margin-bottom:8px}
+.rc-opts{display:flex;gap:6px}
+.rc-btn{flex:1;background:#1a1a1a;border:0.5px solid #2a2a2a;border-radius:7px;padding:8px;font-family:'DM Mono',monospace;font-size:8.5px;letter-spacing:.06em;cursor:pointer;transition:all .2s;text-align:center;color:#666}
+.rc-btn.yes{border-color:#2a5a3a;color:#5a9a6a}
+.rc-btn.yes:hover{background:#1a2a1e;color:#7acc8a;box-shadow:0 0 10px rgba(34,197,120,0.12)}
+.rc-btn.no{border-color:#4a2a2a;color:#9a5a5a}
+.rc-btn.no:hover{background:#2a1a1a;color:#cc7a7a}
+
+/* mood tracker */
+.mood-card{background:#1e1e1e;border:0.5px solid #272727;border-radius:10px;padding:11px 14px}
+.mood-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.mood-label{font-family:'DM Mono',monospace;font-size:7.5px;letter-spacing:.14em;text-transform:uppercase;color:#777}
+.mood-week{display:flex;gap:3px;margin-top:0}
+.mood-day-slot{display:flex;flex-direction:column;align-items:center;gap:3px;flex:1}
+.mood-day-lbl{font-family:'DM Mono',monospace;font-size:7px;color:#444;letter-spacing:.04em}
+.mood-emoji-slot{width:24px;height:24px;border:0.5px solid #272727;border-radius:5px;background:#191919;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;transition:border-color .15s}
+.mood-emoji-slot:hover{border-color:#444}
+.mood-emoji-slot.today{border-color:#4a4a7a;box-shadow:0 0 8px rgba(99,82,255,0.2)}
+.mood-emoji-slot.filled{background:#1a1a2a}
+.mood-picker{display:flex;gap:4px;justify-content:center;margin-top:6px;flex-wrap:wrap}
+.mp-btn{font-size:16px;cursor:pointer;padding:4px 6px;border-radius:5px;border:0.5px solid transparent;transition:all .15s;background:none}
+.mp-btn:hover{background:#252525;border-color:#333}
+
+/* quote */
+.quote-row{display:flex;align-items:flex-start;gap:10px;border-top:0.5px solid #222;padding-top:9px;margin-top:auto}
+.q-mark{font-family:'DM Mono',monospace;font-size:20px;color:#2a2a2a;line-height:1;flex-shrink:0}
+.q-body{flex:1}
+.q-text{font-size:10px;color:#666;font-style:italic;line-height:1.65}
+.q-auth{font-family:'DM Mono',monospace;font-size:7.5px;color:#444;margin-top:3px;letter-spacing:.1em;text-transform:uppercase}
+
+/* ══ FOCUS ══ */
+.focus-wrap{display:flex;flex-direction:column;flex:1;gap:12px;padding:4px 0}
+.task-inp{width:100%;background:#1e1e1e;border:0.5px solid #2a2a2a;border-radius:10px;padding:11px 14px;font-family:'Space Grotesk',sans-serif;font-size:13px;color:#ccc;outline:none;text-align:center;caret-color:#9090dd;transition:all .2s}
+.task-inp::placeholder{color:#444}
+.task-inp:focus{border-color:#3a3a6a;color:#e0e0e0}
+
+.ring-wrap{display:flex;flex-direction:column;align-items:center;gap:0}
+.focus-ring-svg{position:relative;width:170px;height:170px;margin:0 auto}
+.focus-ring-svg svg{position:absolute;top:0;left:0;transform:rotate(-90deg)}
+.rb{stroke:#1e1e1e;fill:none;stroke-width:2}
+.rf{stroke:url(#rg);fill:none;stroke-width:2;stroke-linecap:round;transition:stroke-dashoffset .5s linear}
+.ftd{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
+.ft-big{font-family:'DM Mono',monospace;font-size:36px;font-weight:300;color:#e0e0e0;letter-spacing:-.02em;line-height:1;text-shadow:0 0 24px rgba(220,220,220,0.1)}
+.ft-lbl{font-family:'DM Mono',monospace;font-size:8px;letter-spacing:.14em;text-transform:uppercase;color:#555;margin-top:5px}
+/* session progress dots */
+.session-dots{display:flex;gap:4px;justify-content:center;margin-top:6px}
+.sdot{width:5px;height:5px;border-radius:50%;background:#222;border:0.5px solid #2a2a2a;transition:all .3s}
+.sdot.done{background:#5050a0;border-color:#7070c0;box-shadow:0 0 6px rgba(99,82,255,0.5)}
+.sdot.active{background:#3a3a7a;border-color:#5050a0;animation:sdp 1s ease-in-out infinite}
+@keyframes sdp{0%,100%{box-shadow:0 0 4px rgba(99,82,255,0.3)}50%{box-shadow:0 0 10px rgba(99,82,255,0.7)}}
+
+.dur-row{display:flex;gap:4px;justify-content:center}
+.db{background:#1a1a1a;border:0.5px solid #252525;border-radius:6px;padding:5px 12px;font-family:'DM Mono',monospace;font-size:8.5px;letter-spacing:.06em;color:#666;cursor:pointer;transition:all .2s}
+.db:hover{border-color:#3a3a3a;color:#bbb}
+.db.act{background:#1e1e30;border-color:#3030608;color:#9090dd;border-color:#303060}
+
+.focus-btns{display:flex;gap:6px}
+.fb{flex:1;padding:10px;border-radius:8px;font-family:'DM Mono',monospace;font-size:8.5px;letter-spacing:.1em;text-transform:uppercase;cursor:pointer;transition:all .2s;border:0.5px solid}
+.fb-start{background:#1e1e30;border-color:#303060;color:#9090dd}
+.fb-start:hover{background:#222240;border-color:#5050a0;color:#bbbbee;box-shadow:0 0 16px rgba(99,82,255,0.15)}
+.fb-reset{background:#1a1a1a;border-color:#252525;color:#555}
+.fb-reset:hover{border-color:#3a3a3a;color:#aaa}
+
+.slog{background:#1e1e1e;border:0.5px solid #252525;border-radius:8px;padding:9px 12px;max-height:75px;overflow-y:auto}
+.sl-lbl{font-family:'DM Mono',monospace;font-size:7px;letter-spacing:.12em;text-transform:uppercase;color:#555;margin-bottom:5px}
+.sl-row{font-family:'DM Mono',monospace;font-size:8.5px;color:#777;padding:2px 0;border-bottom:0.5px solid #222;display:flex;justify-content:space-between}
+.sl-row:last-child{border-bottom:none}
+.sl-row span:last-child{color:#4a8a5a}
+.sl-empty{font-family:'DM Mono',monospace;font-size:8.5px;color:#444;font-style:italic}
+</style>
+</head>
+<body>
+<div class="amb"><div class="amb-1"></div><div class="amb-2"></div></div>
+
+<div class="wrap">
+  <!-- NAV -->
+  <div class="top-nav">
+    <div class="brand">EP · HQ</div>
+    <div class="tabs">
+      <button class="tab active" onclick="sw('briefing',this)">Briefing</button>
+      <button class="tab" onclick="sw('focus',this)">Focus</button>
+    </div>
+    <div class="live"><span class="ldot"></span>Live</div>
+  </div>
+
+  <!-- ══ BRIEFING ══ -->
+  <div class="screen active" id="sc-briefing">
+
+    <!-- context banner -->
+    <div class="ctx-banner morning" id="ctx-banner">
+      <div class="ctx-icon" id="ctx-icon">🌅</div>
+      <div class="ctx-text">
+        <div class="ctx-title" id="ctx-title">Morning Briefing</div>
+        <div class="ctx-sub" id="ctx-sub">Start strong. Set your intention for the day.</div>
+      </div>
+    </div>
+
+    <!-- clock -->
+    <div class="clock-row">
+      <div class="clock-big"><span id="ch">00</span><span class="csep">:</span><span id="cm">00</span><span class="campm" id="campm">AM</span></div>
+      <div class="clock-meta-col">
+        <div class="cdate" id="cdate">—</div>
+        <div class="cweek" id="cweek">—</div>
+      </div>
+    </div>
+
+    <!-- chips -->
+    <div class="chips">
+      <div class="chip"><div class="chip-label">Week</div><div class="chip-val accent-purple" id="c-week">—</div></div>
+      <div class="chip"><div class="chip-label">Quarter</div><div class="chip-val" id="c-qtr">—</div></div>
+      <div class="chip"><div class="chip-label">Day of year</div><div class="chip-val accent-amber" id="c-doy">—</div></div>
+      <div class="chip"><div class="chip-label">Days left</div><div class="chip-val accent-green" id="c-left">—</div></div>
+    </div>
+
+    <!-- progress bars -->
+    <div class="progs">
+      <div class="pr ry"><div class="pr-lbl">Year</div><div class="pr-track"><div class="pr-fill" id="py" style="width:0%"></div></div><div class="pr-pct" id="ppy">—</div></div>
+      <div class="pr rq"><div class="pr-lbl">Quarter</div><div class="pr-track"><div class="pr-fill" id="pq" style="width:0%"></div></div><div class="pr-pct" id="ppq">—</div></div>
+      <div class="pr rm"><div class="pr-lbl">Month</div><div class="pr-track"><div class="pr-fill" id="pm" style="width:0%"></div></div><div class="pr-pct" id="ppm">—</div></div>
+      <div class="pr rw"><div class="pr-lbl">Week</div><div class="pr-track"><div class="pr-fill" id="pw" style="width:0%"></div></div><div class="pr-pct" id="ppw">—</div></div>
+    </div>
+
+    <!-- intention (morning) -->
+    <div class="int-card" id="int-card">
+      <div class="ic-top">
+        <div class="ic-label">Today's Intention</div>
+        <div class="streak-badge">
+          <div class="streak-n" id="streak-n">0</div>
+          <div class="streak-fire">🔥</div>
+        </div>
+      </div>
+      <input class="int-input" id="int-inp" placeholder="What is the ONE thing that matters today?" maxlength="80"/>
+      <div class="int-row2">
+        <div class="energy-btns">
+          <button class="eb" data-e="low" onclick="selE(this)" title="Low energy">🔋</button>
+          <button class="eb" data-e="med" onclick="selE(this)" title="Medium energy">⚡</button>
+          <button class="eb" data-e="high" onclick="selE(this)" title="High energy">🚀</button>
+        </div>
+        <button class="int-save" onclick="saveInt()">Set →</button>
+      </div>
+    </div>
+
+    <!-- quick tasks -->
+    <div class="tasks-card" id="tasks-card">
+      <div class="tc-top">
+        <div class="tc-label">Today's Tasks</div>
+        <button class="tc-add" onclick="showTaskInput()">+ Add</button>
+      </div>
+      <div class="task-list" id="task-list">
+        <div class="no-tasks" id="no-tasks">No tasks yet — add your first one</div>
+      </div>
+      <div class="task-input-row" id="task-input-row" style="display:none">
+        <input class="task-new-input" id="task-new-inp" placeholder="Add a task..." maxlength="50" onkeydown="if(event.key==='Enter')addTask()"/>
+        <button class="task-add-btn" onclick="addTask()">Add</button>
+      </div>
+    </div>
+
+    <!-- mood tracker -->
+    <div class="mood-card">
+      <div class="mood-top">
+        <div class="mood-label">Weekly Mood</div>
+      </div>
+      <div class="mood-week" id="mood-week"></div>
+      <div class="mood-picker" id="mood-picker" style="display:none">
+        <button class="mp-btn" onclick="setMood('😤')">😤</button>
+        <button class="mp-btn" onclick="setMood('😐')">😐</button>
+        <button class="mp-btn" onclick="setMood('🙂')">🙂</button>
+        <button class="mp-btn" onclick="setMood('😊')">😊</button>
+        <button class="mp-btn" onclick="setMood('🔥')">🔥</button>
+      </div>
+    </div>
+
+    <!-- evening reflection (shown after 5pm) -->
+    <div class="reflect-card" id="reflect-card" style="display:none">
+      <div class="rc-label">Evening Reflection</div>
+      <div class="rc-echo" id="rc-echo">—</div>
+      <div class="rc-question">Did you complete your intention today?</div>
+      <div class="rc-opts">
+        <button class="rc-btn yes" onclick="logRef(true)">✓ Yes, completed</button>
+        <button class="rc-btn no" onclick="logRef(false)">✗ Not today</button>
+      </div>
+    </div>
+
+    <!-- quote -->
+    <div class="quote-row" style="margin-top:auto">
+      <div class="q-mark">"</div>
+      <div class="q-body">
+        <div class="q-text" id="q-text"></div>
+        <div class="q-auth" id="q-auth"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ FOCUS ══ -->
+  <div class="screen" id="sc-focus">
+    <div class="focus-wrap">
+      <input class="task-inp" id="f-task" placeholder="What are you working on right now?" maxlength="60"/>
+
+      <div class="ring-wrap">
+        <div class="focus-ring-svg">
+          <svg width="170" height="170" viewBox="0 0 170 170">
+            <defs>
+              <linearGradient id="rg" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#3a3a9a"/>
+                <stop offset="100%" stop-color="#8888dd"/>
+              </linearGradient>
+            </defs>
+            <circle class="rb" cx="85" cy="85" r="75"/>
+            <circle class="rf" id="rf" cx="85" cy="85" r="75" stroke-dasharray="471.24" stroke-dashoffset="471.24"/>
+          </svg>
+          <div class="ftd">
+            <div class="ft-big" id="ft-big">25:00</div>
+            <div class="ft-lbl" id="ft-lbl">ready</div>
+          </div>
+        </div>
+        <!-- 4 pomodoro session dots -->
+        <div class="session-dots">
+          <div class="sdot" id="sd0"></div>
+          <div class="sdot" id="sd1"></div>
+          <div class="sdot" id="sd2"></div>
+          <div class="sdot" id="sd3"></div>
+        </div>
+      </div>
+
+      <div class="dur-row">
+        <button class="db act" onclick="setDur(25,this)">25m</button>
+        <button class="db" onclick="setDur(45,this)">45m</button>
+        <button class="db" onclick="setDur(60,this)">60m</button>
+        <button class="db" onclick="setDur(90,this)">90m</button>
+      </div>
+
+      <div class="focus-btns">
+        <button class="fb fb-start" id="fb-start" onclick="toggleFocus()">Start Session</button>
+        <button class="fb fb-reset" onclick="resetFocus()">Reset</button>
+      </div>
+
+      <div class="slog" id="slog">
+        <div class="sl-lbl">Session Log — Today</div>
+        <div class="sl-empty" id="sl-empty">No sessions yet</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const Q=[
+  {t:"Build the business you wish existed.",a:"Unknown"},
+  {t:"Earn with your mind, not your time.",a:"Naval Ravikant"},
+  {t:"Done is better than perfect.",a:"Sheryl Sandberg"},
+  {t:"Revenue is vanity. Profit is sanity. Cash is reality.",a:"Unknown"},
+  {t:"You don't rise to your goals. You fall to your systems.",a:"James Clear"},
+  {t:"Move fast. Think slow.",a:"Naval Ravikant"},
+  {t:"The market rewards value, not effort.",a:"Unknown"},
+  {t:"Chase the vision, not the money.",a:"Tony Hsieh"},
+  {t:"Discipline is choosing what you want most over what you want now.",a:"Abraham Lincoln"},
+  {t:"Your time is limited. Don't waste it living someone else's life.",a:"Steve Jobs"},
+  {t:"It's not about ideas. It's about making ideas happen.",a:"Scott Belsky"},
+  {t:"Work like there is someone trying to take it all away from you.",a:"Mark Cuban"},
+  {t:"The secret of getting ahead is getting started.",a:"Mark Twain"},
+  {t:"Be so good they can't ignore you.",a:"Steve Martin"},
+];
+const DAYS=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const DAYS_FULL=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const S={get:k=>localStorage.getItem('ep_'+k),set:(k,v)=>localStorage.setItem('ep_'+k,v)};
+function pad(n){return String(n).padStart(2,'0')}
+function calcPct(s,e,n){return Math.min(100,Math.max(0,Math.round(((n-s)/(e-s))*100)))}
+function todayKey(){const n=new Date();return `${n.getFullYear()}_${n.getMonth()}_${n.getDate()}`}
+function weekKey(d){return `${d.getFullYear()}_w${Math.ceil(((d-new Date(d.getFullYear(),0,1))/86400000+new Date(d.getFullYear(),0,1).getDay()+1)/7)}`}
+
+function sw(id,el){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('sc-'+id).classList.add('active');
+  el.classList.add('active');
+}
+
+/* ── BRIEFING ── */
+function updateCtxBanner(){
+  const h=new Date().getHours();
+  const banner=document.getElementById('ctx-banner');
+  banner.className='ctx-banner';
+  if(h<12){
+    banner.classList.add('morning');
+    document.getElementById('ctx-icon').textContent='🌅';
+    document.getElementById('ctx-title').textContent='Morning Briefing';
+    document.getElementById('ctx-sub').textContent='Start strong. Set your intention for the day.';
+  } else if(h<17){
+    banner.classList.add('afternoon');
+    document.getElementById('ctx-icon').textContent='☀️';
+    document.getElementById('ctx-title').textContent='Afternoon Check-in';
+    document.getElementById('ctx-sub').textContent='Stay focused. How are your tasks going?';
+  } else {
+    banner.classList.add('evening');
+    document.getElementById('ctx-icon').textContent='🌙';
+    document.getElementById('ctx-title').textContent='Evening Wind-down';
+    document.getElementById('ctx-sub').textContent='Reflect on today. Prepare for tomorrow.';
+  }
+}
+
+function updateClock(){
+  const now=new Date(),y=now.getFullYear();
+  let h=now.getHours(),m=now.getMinutes();
+  const ap=h>=12?'PM':'AM';h=h%12||12;
+  document.getElementById('ch').textContent=pad(h);
+  document.getElementById('cm').textContent=pad(m);
+  document.getElementById('campm').textContent=ap;
+  document.getElementById('cdate').textContent=`${DAYS_FULL[now.getDay()]}, ${MONTHS[now.getMonth()]} ${now.getDate()} ${y}`;
+  const yStart=new Date(y,0,1);
+  const wn=Math.ceil(((now-yStart)/86400000+yStart.getDay()+1)/7);
+  document.getElementById('cweek').textContent=`Week ${wn} · Q${Math.floor(now.getMonth()/3)+1}`;
+}
+
+function updateStats(){
+  const now=new Date(),y=now.getFullYear();
+  const isLeap=y%4===0,total=isLeap?366:365;
+  const yStart=new Date(y,0,1),yEnd=new Date(y+1,0,1);
+  const doy=Math.ceil((now-yStart)/86400000);
+  const wn=Math.ceil(((now-yStart)/86400000+yStart.getDay()+1)/7);
+  document.getElementById('c-week').textContent=wn;
+  document.getElementById('c-qtr').textContent='Q'+( Math.floor(now.getMonth()/3)+1);
+  document.getElementById('c-doy').textContent=doy;
+  document.getElementById('c-left').textContent=total-doy;
+
+  const yp=calcPct(yStart,yEnd,now);
+  const qr=Math.floor(now.getMonth()/3);
+  const qp=calcPct(new Date(y,qr*3,1),new Date(y,qr*3+3,1),now);
+  const mp=calcPct(new Date(y,now.getMonth(),1),new Date(y,now.getMonth()+1,1),now);
+  const day=now.getDay()||7;
+  const wStart=new Date(now);wStart.setDate(now.getDate()-day+1);wStart.setHours(0,0,0,0);
+  const wp=calcPct(wStart,new Date(wStart.getTime()+7*86400000),now);
+  [['py','ppy',yp],['pq','ppq',qp],['pm','ppm',mp],['pw','ppw',wp]].forEach(([f,v,p])=>{
+    document.getElementById(f).style.width=p+'%';
+    document.getElementById(v).textContent=p+'%';
+  });
+}
+
+function updateTimeContext(){
+  const h=new Date().getHours();
+  const isEvening=h>=17;
+  document.getElementById('int-card').style.display=isEvening?'none':'block';
+  document.getElementById('reflect-card').style.display=isEvening?'block':'none';
+  if(isEvening){
+    const saved=S.get('int_'+todayKey());
+    document.getElementById('rc-echo').textContent=saved?`"${JSON.parse(saved).intention}"`:'No intention was set today.';
+  }
+}
+
+/* intention */
+function selE(el){document.querySelectorAll('.eb').forEach(b=>{b.classList.remove('sel-low','sel-med','sel-high')});el.classList.add('sel-'+el.dataset.e)}
+function saveInt(){
+  const v=document.getElementById('int-inp').value.trim();if(!v)return;
+  const e=document.querySelector('.eb[class*="sel-"]')?.dataset?.e||'';
+  S.set('int_'+todayKey(),JSON.stringify({intention:v,energy:e,time:Date.now()}));
+  updateStreak();
+  document.getElementById('int-inp').value='';
+  document.getElementById('int-inp').placeholder='Intention set ✓';
+  setTimeout(()=>{document.getElementById('int-inp').placeholder='What is the ONE thing that matters today?'},2500);
+}
+function updateStreak(){
+  let streak=0;const d=new Date();
+  for(let i=0;i<365;i++){const k=`${d.getFullYear()}_${d.getMonth()}_${d.getDate()}`;if(S.get('int_'+k)){streak++;d.setDate(d.getDate()-1);}else break;}
+  S.set('streak',streak);document.getElementById('streak-n').textContent=streak;
+}
+function loadInt(){
+  document.getElementById('streak-n').textContent=S.get('streak')||'0';
+  const saved=S.get('int_'+todayKey());
+  if(saved){const d=JSON.parse(saved);document.getElementById('int-inp').placeholder=`"${d.intention.slice(0,36)}…" ✓`;if(d.energy){const eb=document.querySelector(`.eb[data-e="${d.energy}"]`);if(eb)selE(eb);}}
+}
+
+/* reflection */
+function logRef(done){
+  const key=todayKey();const s=S.get('int_'+key);
+  if(s){const d=JSON.parse(s);d.completed=done;S.set('int_'+key,JSON.stringify(d));}
+  updateStreak();
+  document.getElementById('reflect-card').innerHTML=`<div style="font-family:'DM Mono',monospace;font-size:11px;color:${done?'#5a9a6a':'#9a5a5a'};letter-spacing:.06em;padding:6px 0">${done?'Great work today! Streak continues 🔥':'Tomorrow is a fresh start 💪'}</div>`;
+}
+
+/* tasks */
+let tasks=JSON.parse(S.get('tasks_'+todayKey())||'[]');
+function saveTasks(){S.set('tasks_'+todayKey(),JSON.stringify(tasks))}
+function renderTasks(){
+  const list=document.getElementById('task-list');
+  list.innerHTML='';
+  if(!tasks.length){list.innerHTML='<div class="no-tasks" id="no-tasks">No tasks yet — add your first one</div>';return;}
+  tasks.forEach((t,i)=>{
+    const item=document.createElement('div');item.className='task-item';
+    item.innerHTML=`<div class="task-check ${t.done?'done':''}" onclick="toggleTask(${i})"></div><div class="task-text ${t.done?'done':''}">${t.text}</div><button class="task-del" onclick="delTask(${i})">✕</button>`;
+    list.appendChild(item);
+  });
+}
+function showTaskInput(){
+  const row=document.getElementById('task-input-row');
+  row.style.display=row.style.display==='none'?'flex':'none';
+  if(row.style.display==='flex')document.getElementById('task-new-inp').focus();
+}
+function addTask(){
+  const v=document.getElementById('task-new-inp').value.trim();if(!v)return;
+  tasks.push({text:v,done:false});saveTasks();renderTasks();
+  document.getElementById('task-new-inp').value='';
+}
+function toggleTask(i){tasks[i].done=!tasks[i].done;saveTasks();renderTasks();}
+function delTask(i){tasks.splice(i,1);saveTasks();renderTasks();}
+
+/* mood */
+let activeMoodDay=null;
+function renderMoodWeek(){
+  const now=new Date();
+  const dayOfWeek=now.getDay()||7;
+  const week=document.getElementById('mood-week');week.innerHTML='';
+  for(let i=1;i<=7;i++){
+    const d=new Date(now);d.setDate(now.getDate()-dayOfWeek+i);
+    const key=`mood_${d.getFullYear()}_${d.getMonth()}_${d.getDate()}`;
+    const saved=S.get(key);
+    const isToday=d.toDateString()===now.toDateString();
+    const isFuture=d>now;
+    const slot=document.createElement('div');slot.className='mood-day-slot';
+    slot.innerHTML=`<div class="mood-day-lbl">${DAYS[d.getDay()]}</div><div class="mood-emoji-slot ${isToday?'today':''} ${saved?'filled':''}" onclick="${!isFuture?`pickMood('${key}')`:''}"><span>${saved||( isFuture?'':'·')}</span></div>`;
+    week.appendChild(slot);
+  }
+}
+function pickMood(key){
+  activeMoodDay=key;
+  const picker=document.getElementById('mood-picker');
+  picker.style.display=picker.style.display==='none'?'flex':'none';
+}
+function setMood(emoji){
+  if(!activeMoodDay)return;
+  S.set(activeMoodDay,emoji);
+  document.getElementById('mood-picker').style.display='none';
+  renderMoodWeek();
+}
+
+/* quote */
+function setQuote(){const q=Q[new Date().getDate()%Q.length];document.getElementById('q-text').textContent=`${q.t}`;document.getElementById('q-auth').textContent=`— ${q.a}`;}
+
+/* ── FOCUS ── */
+let fDur=25*60,fRem=25*60,fRunning=false,fInt=null,fSessions=0;
+const FC=471.24;
+function setDur(min,el){if(fRunning)return;document.querySelectorAll('.db').forEach(b=>b.classList.remove('act'));el.classList.add('act');fDur=min*60;fRem=fDur;updateFD();}
+function updateFD(){
+  const m=Math.floor(fRem/60),s=fRem%60;
+  document.getElementById('ft-big').textContent=`${pad(m)}:${pad(s)}`;
+  document.getElementById('rf').style.strokeDashoffset=FC*(fRem/fDur);
+}
+function updateDots(){
+  for(let i=0;i<4;i++){
+    const d=document.getElementById('sd'+i);
+    d.className='sdot'+(i<fSessions?' done':i===fSessions?' active':'');
+  }
+}
+function toggleFocus(){
+  if(fRunning){
+    clearInterval(fInt);fRunning=false;
+    document.getElementById('fb-start').textContent='Resume Session';
+    document.getElementById('ft-lbl').textContent='paused';
+  } else {
+    fRunning=true;
+    document.getElementById('fb-start').textContent='Pause Session';
+    document.getElementById('ft-lbl').textContent='focusing...';
+    fInt=setInterval(()=>{
+      if(fRem<=0){
+        clearInterval(fInt);fRunning=false;
+        logSess();
+        fSessions=Math.min(4,fSessions+1);
+        updateDots();
+        document.getElementById('ft-lbl').textContent='complete ✓';
+        document.getElementById('fb-start').textContent='Start Session';
+        fRem=fDur;updateFD();return;
+      }
+      fRem--;updateFD();
+    },1000);
+  }
+}
+function resetFocus(){clearInterval(fInt);fRunning=false;fRem=fDur;updateFD();document.getElementById('fb-start').textContent='Start Session';document.getElementById('ft-lbl').textContent='ready';}
+function logSess(){
+  const task=document.getElementById('f-task').value.trim()||'Focus session';
+  const min=Math.round(fDur/60);const now=new Date();
+  const log=document.getElementById('slog');
+  const empty=document.getElementById('sl-empty');if(empty)empty.remove();
+  const row=document.createElement('div');row.className='sl-row';
+  row.innerHTML=`<span>${task.slice(0,24)}</span><span>${min}m · ${pad(now.getHours())}:${pad(now.getMinutes())}</span>`;
+  log.appendChild(row);
+}
+
+/* ── INIT ── */
+updateCtxBanner();
+updateClock();setInterval(updateClock,1000);
+updateStats();setInterval(updateStats,60000);
+updateTimeContext();setInterval(updateTimeContext,60000);
+setInterval(updateCtxBanner,60000);
+loadInt();
+tasks=JSON.parse(S.get('tasks_'+todayKey())||'[]');renderTasks();
+renderMoodWeek();
+setQuote();
+updateFD();updateDots();
+</script>
+</body>
+</html>
